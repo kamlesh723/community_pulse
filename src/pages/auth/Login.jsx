@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-    Container, TextField, Button, Typography, Box, Grid
+    Container, TextField, Button, Typography, Box, Grid, Link
 } from '@mui/material';
 
 const Login = () => {
@@ -64,6 +64,16 @@ const Login = () => {
                         </Grid>
                     </Grid>
                 </form>
+
+                {/* Register Now Link */}
+                <Box sx={{ mt: 2, textAlign: 'center' }}>
+                    <Typography variant="body2">
+                        <span>Don't have an account? </span>
+                        <Link href="/register" variant="body2" underline="hover">
+                            Register Now
+                        </Link>
+                    </Typography>
+                </Box>
             </Box>
         </Container>
     );
