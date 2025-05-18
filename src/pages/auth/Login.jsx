@@ -9,7 +9,7 @@ import {
     Link
 } from "@mui/material";
 import {useNavigate, Link as RouterLink} from "react-router-dom";
-import {loginUser, registerUser} from "../../API/API.jsx";
+import {loginUser} from "../../API/API.jsx";
 
 const Login = () => {
     const [form, setForm] = useState({email: "", password: ""});
