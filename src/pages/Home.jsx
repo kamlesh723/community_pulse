@@ -154,7 +154,7 @@ function Home() {
     });
 
     const paginatedEvents = filteredEvents.slice((page - 1) * eventsPerPage, page * eventsPerPage);
-    const totalPages = Math.ceil(filteredEvents.length / eventsPerPage);
+    const totalPages = 2;
 
     return (
         <>

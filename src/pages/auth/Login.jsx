@@ -1,79 +1,86 @@
-import React, { useState } from 'react';
+import React, {useState} from "react";
 import {
-    Container, TextField, Button, Typography, Box, Grid, Link
-} from '@mui/material';
+    Button,
+    TextField,
+    Typography,
+    Container,
+    Alert,
+    Box,
+    Link
+} from "@mui/material";
+import {useNavigate, Link as RouterLink} from "react-router-dom";
+import {loginUser, registerUser} from "../../API/API.jsx";
 
 const Login = () => {
-    const [formData, setFormData] = useState({
-        username: '',
-        password: '',
-    });
-
-    const [errors, setErrors] = useState({});
+    const [form, setForm] = useState({email: "", password: ""});
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        setForm({...form, [e.target.name]: e.target.value});
     };
 
-    const validate = () => {
-        let tempErrors = {};
+    const handleLogin = async () => {
+        const {email, password} = form;
 
-        if (!formData.username) tempErrors.username = "Username is required.";
-        if (!formData.password) tempErrors.password = "Password is required.";
-
-        setErrors(tempErrors);
-
-        return Object.keys(tempErrors).length === 0;
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (validate()) {
-            console.log('Login submitted:', formData);
-            alert('Logged in successfully!');
-            // Handle login logic here (e.g. API call)
+        if (!email || !password) {
+            return setError("Both email and password are required.");
         }
+
+        try {
+            const response = await loginUser(email, password);
+
+            console.log(response)
+
+            // Extract token and save to localStorage
+            const {token} = response.data;
+            localStorage.setItem("token", token);
+
+            // Redirect to home/dashboard
+            navigate("/dashboard");
+        } catch (err) {
+            if (err.response && err.response.status === 401) {
+                setError("Invalid credentials.");
+            } else {
+                setError("Login failed. Please try again.");
+            }
+        }
+        window.location.reload();
     };
 
     return (
         <Container maxWidth="sm">
-            <Box sx={{ mt: 5 }}>
-                <Typography variant="h4" gutterBottom>
-                    Login
-                </Typography>
-                <form onSubmit={handleSubmit}>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth label="Username" name="username"
-                                value={formData.username} onChange={handleChange}
-                                error={!!errors.username} helperText={errors.username}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth label="Password" name="password" type="password"
-                                value={formData.password} onChange={handleChange}
-                                error={!!errors.password} helperText={errors.password}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Button fullWidth type="submit" variant="contained" color="primary">
-                                Login
-                            </Button>
-                        </Grid>
-                    </Grid>
-                </form>
+            <Typography variant="h4" gutterBottom>User Login</Typography>
+            {error && <Alert severity="error">{error}</Alert>}
+            <TextField
+                label="Email"
+                name="email"
+                type="email"
+                fullWidth
+                margin="normal"
+                value={form.email}
+                onChange={handleChange}
+            />
+            <TextField
+                type="password"
+                label="Password"
+                name="password"
+                fullWidth
+                margin="normal"
+                value={form.password}
+                onChange={handleChange}
+            />
+            <Button variant="contained" fullWidth onClick={handleLogin}>
+                Login
+            </Button>
 
-                {/* Register Now Link */}
-                <Box sx={{ mt: 2, textAlign: 'center' }}>
-                    <Typography variant="body2">
-                        <span>Don't have an account? </span>
-                        <Link href="/register" variant="body2" underline="hover">
-                            Register Now
-                        </Link>
-                    </Typography>
-                </Box>
+            <Box mt={2} textAlign="center">
+                <Typography variant="body2">
+                    Don't have an account?{" "}
+                    <Link component={RouterLink} to="/register">
+                        Register here
+                    </Link>
+                </Typography>
             </Box>
         </Container>
     );
