@@ -42,7 +42,9 @@ const Register = () => {
             const response = await registerUser(email, username, phone, password);
 
             if (response.status === 200) {
-                navigate("/login");
+                // Save email for OTP verification
+                localStorage.setItem("pendingEmail", email);
+                navigate("/otp-verification", { state: { email } });
             }
         } catch (err) {
             if (err.response && err.response.data) {

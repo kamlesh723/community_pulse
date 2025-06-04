@@ -11,6 +11,14 @@ export const registerUser = async (email, username, phone, password) => {
     });
 };
 
+// Use axios for consistency
+export const verifyOtp = async (email, otp) => {
+    return axios.post(`${API_BASE_URL}/auth/users/verify-otp`, {
+        email,
+        otp
+    });
+};
+
 export const loginUser = async (email, password) => {
     return axios.post(`${API_BASE_URL}/auth/users/login`, {email, password});
 };
@@ -23,10 +31,5 @@ export const logoutUser = () => {
 
 export const isLoggedIn = () => {
     const token = localStorage.getItem("token");
-
-    if (!token) {
-        return false;
-    }
-
-    return true;
+    return !!token;
 };

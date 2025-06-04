@@ -7,6 +7,7 @@ import Register from "./pages/auth/Register.jsx";
 import MyEvents from "./pages/MyEvents.jsx";
 import PrivateLayout from "./components/PrivateLayout.jsx";
 import Home from "./pages/Home.jsx";
+import OTPVerification from "./pages/auth/OTPVerification.jsx";
 
 const PrivateRoute = ({ element }) => {
     return isLoggedIn() ? element : <Navigate to="/home" />;
@@ -25,6 +26,7 @@ const AppRoutes = () => {
                 <Route path="home" element={<PublicRoute element={<Home />} />} />
                 <Route path="login" element={<PublicRoute element={<Login />} />} />
                 <Route path="register" element={<PublicRoute element={<Register />} />} />
+                <Route path="/otp-verification" element={<OTPVerification />} />
 
                 {/* Private (authenticated) routes */}
                 <Route element={<PrivateRoute element={<PrivateLayout />} />}>
