@@ -1,10 +1,10 @@
 import {
     Card, CardContent, Typography, Grid, CardActions, Button,
-    Dialog, DialogTitle, DialogContent, DialogActions,
     Select, MenuItem, FormControl, InputLabel, Pagination,
-    TextField, Slider, Box, Chip
+    TextField, Box, Chip
 } from "@mui/material";
 import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 // Sample events with updated dates based on current date (June 4, 2025)
 const allEvents = [
@@ -137,6 +137,8 @@ const getEventStatus = (eventDate) => {
 };
 
 function Home() {
+    const navigate = useNavigate();
+    
     const [categoryFilter, setCategoryFilter] = useState("All");
     const [cityFilter, setCityFilter] = useState("All");
     const [organizerFilter, setOrganizerFilter] = useState("All");
@@ -144,19 +146,11 @@ function Home() {
     const [priceRange, setPriceRange] = useState([0, 500]);
     const [eventDate, setEventDate] = useState("");
     const [onlyAvailableSeats, setOnlyAvailableSeats] = useState(false);
-    const [selectedEvent, setSelectedEvent] = useState(null);
-    const [openModal, setOpenModal] = useState(false);
     const [page, setPage] = useState(1);
     const eventsPerPage = 12;
 
-    const handleOpenModal = (event) => {
-        setSelectedEvent(event);
-        setOpenModal(true);
-    };
-
-    const handleCloseModal = () => {
-        setOpenModal(false);
-        setSelectedEvent(null);
+    const handleViewDetails = (eventId) => {
+        navigate(`/event/${eventId}`);
     };
 
     const filteredEvents = allEvents.filter(event => {
@@ -359,7 +353,7 @@ function Home() {
                                     <Typography variant="subtitle1" sx={{ mt: 1 }}><strong>₹{event.price}</strong></Typography>
                                 </CardContent>
                                 <CardActions sx={{ justifyContent: "flex-end", px: 2, pb: 2 }}>
-                                    <Button variant="outlined" size="small" onClick={() => handleOpenModal(event)}>
+                                    <Button variant="outlined" size="small" onClick={() => handleViewDetails(event.id)}>
                                         View Details
                                     </Button>
                                 </CardActions>
@@ -377,37 +371,6 @@ function Home() {
                 color="primary"
                 sx={{ mt: 4 }}
             />
-
-            {/* Modal */}
-            <Dialog open={openModal} onClose={handleCloseModal} fullWidth>
-                {selectedEvent && (
-                    <>
-                        <DialogTitle>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                {selectedEvent.name}
-                                <Chip
-                                    label={getEventStatus(selectedEvent.date).status}
-                                    color={getEventStatus(selectedEvent.date).color}
-                                    size="small"
-                                />
-                            </Box>
-                        </DialogTitle>
-                        <DialogContent dividers>
-                            <Typography><strong>Venue:</strong> {selectedEvent.venue}, {selectedEvent.city}</Typography>
-                            <Typography><strong>Organizer:</strong> {selectedEvent.organizer}</Typography>
-                            <Typography><strong>Category:</strong> {selectedEvent.category}</Typography>
-                            <Typography><strong>Date:</strong> {selectedEvent.date}</Typography>
-                            <Typography><strong>Seats Left:</strong> {selectedEvent.seats}</Typography>
-                            <Typography sx={{ my: 2 }}>{selectedEvent.description}</Typography>
-                            <Typography><strong>Price:</strong> ₹{selectedEvent.price}</Typography>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={handleCloseModal}>Close</Button>
-                            <Button variant="contained" color="primary">Book Now</Button>
-                        </DialogActions>
-                    </>
-                )}
-            </Dialog>
         </>
     );
 }
