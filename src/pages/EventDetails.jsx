@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
     Container, 
@@ -9,9 +9,20 @@ import {
     Box, 
     Chip,
     Grid,
-    Paper
+    Paper,
+    Divider,
+    Avatar,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField,
+    List,
+    ListItem,
+    ListItemText,
+    ListItemIcon,
+    IconButton
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 // Same events data as Home.jsx
 const allEvents = [
@@ -34,7 +45,7 @@ const allEvents = [
         category: "Food",
         city: "Delhi",
         venue: "Central Park",
-        description: "Explore global cuisine with amazing food stalls from around the world. Taste authentic dishes, enjoy live cooking demonstrations, and meet renowned chefs.",
+        description: "Explore global cuisine with amazing food stalls from around the world. Taste authentic dishes and enjoy live cooking demonstrations.",
         price: 299,
         date: "2025-06-03",
         organizer: "Foodies United",
@@ -47,7 +58,7 @@ const allEvents = [
         category: "Art",
         city: "Bangalore",
         venue: "Amphitheatre",
-        description: "Live music & art showcase featuring local artists and musicians. Experience creativity at its finest with interactive art installations and live performances.",
+        description: "Live music & art showcase featuring local artists and musicians. Experience creativity at its finest with interactive art installations.",
         price: 150,
         date: "2025-06-01",
         organizer: "Creative House",
@@ -60,7 +71,7 @@ const allEvents = [
         category: "Business",
         city: "Hyderabad",
         venue: "Tech Hub",
-        description: "Networking event for entrepreneurs and startup enthusiasts. Connect with investors, mentors, and fellow entrepreneurs. Learn about latest trends in startup ecosystem.",
+        description: "Networking event for entrepreneurs and startup enthusiasts. Connect with investors, mentors, and fellow entrepreneurs.",
         price: 250,
         date: "2025-06-02",
         organizer: "Startup India",
@@ -73,7 +84,7 @@ const allEvents = [
         category: "Health",
         city: "Pune",
         venue: "Green Valley",
-        description: "Mindfulness retreat with meditation sessions, yoga classes, and wellness workshops. Rejuvenate your mind and body in a peaceful natural environment.",
+        description: "Mindfulness retreat with meditation sessions, yoga classes, and wellness workshops. Rejuvenate your mind and body.",
         price: 350,
         date: "2025-06-03",
         organizer: "Wellness Org",
@@ -86,7 +97,7 @@ const allEvents = [
         category: "Education",
         city: "Delhi",
         venue: "Expo Hall",
-        description: "Thousands of books from various genres and authors. Meet your favorite authors, participate in book reading sessions, and discover new literary treasures.",
+        description: "Thousands of books from various genres and authors. Meet your favorite authors and participate in book reading sessions.",
         price: 50,
         date: "2025-06-05",
         organizer: "ReadIndia",
@@ -99,7 +110,7 @@ const allEvents = [
         category: "Entertainment",
         city: "Mumbai",
         venue: "Grand Cinema",
-        description: "Premieres and awards ceremony featuring independent films and documentaries. Red carpet event with celebrity appearances and exclusive screenings.",
+        description: "Premieres and awards ceremony featuring independent films and documentaries. Red carpet event with celebrity appearances.",
         price: 399,
         date: "2025-06-06",
         organizer: "Movie Buffs",
@@ -112,7 +123,7 @@ const allEvents = [
         category: "Music",
         city: "Chennai",
         venue: "Stadium Arena",
-        description: "Live concert with famous bands and solo artists. Experience electrifying performances, amazing sound quality, and unforgettable musical moments.",
+        description: "Live concert with famous bands and solo artists. Experience electrifying performances and amazing sound quality.",
         price: 499,
         date: "2025-06-07",
         organizer: "Music Lovers",
@@ -143,16 +154,33 @@ function EventDetails() {
     const { id } = useParams();
     const navigate = useNavigate();
     
+    // States for popup and issues
+    const [openIssueDialog, setOpenIssueDialog] = useState(false);
+    const [issueText, setIssueText] = useState('');
+    const [issues, setIssues] = useState([]);
+    
     const event = allEvents.find(e => e.id === parseInt(id));
     
     if (!event) {
         return (
             <Container sx={{ mt: 4, textAlign: 'center' }}>
-                <Typography variant="h4">Event Not Found</Typography>
+                <Typography variant="h4" color="error" gutterBottom>
+                    Event Not Found
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+                    The event you're looking for doesn't exist or has been removed.
+                </Typography>
                 <Button 
                     variant="contained" 
+                    size="large"
                     onClick={() => navigate('/')}
-                    sx={{ mt: 2 }}
+                    sx={{ 
+                        px: 4, 
+                        py: 1.5,
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        fontSize: '1.1rem'
+                    }}
                 >
                     Go Back Home
                 </Button>
@@ -162,131 +190,500 @@ function EventDetails() {
 
     const eventStatus = getEventStatus(event.date);
 
+    // Handle issue submission
+    const handleSubmitIssue = () => {
+        if (issueText.trim()) {
+            const newIssue = {
+                id: Date.now(),
+                text: issueText,
+                timestamp: new Date().toLocaleString(),
+                upvotes: 0,
+                irrelevantVotes: 0,
+                userVote: null // null, 'upvote', or 'irrelevant'
+            };
+            setIssues([...issues, newIssue]);
+            setIssueText('');
+            setOpenIssueDialog(false);
+        }
+    };
+
+    // Handle voting on issues
+    const handleVote = (issueId, voteType) => {
+        setIssues(issues.map(issue => {
+            if (issue.id === issueId) {
+                const newIssue = { ...issue };
+                
+                // Remove previous vote if exists
+                if (newIssue.userVote === 'upvote') {
+                    newIssue.upvotes -= 1;
+                } else if (newIssue.userVote === 'irrelevant') {
+                    newIssue.irrelevantVotes -= 1;
+                }
+                
+                // Add new vote or toggle off
+                if (newIssue.userVote === voteType) {
+                    // User clicked same button - remove vote
+                    newIssue.userVote = null;
+                } else {
+                    // User clicked different button - add vote
+                    if (voteType === 'upvote') {
+                        newIssue.upvotes += 1;
+                    } else if (voteType === 'irrelevant') {
+                        newIssue.irrelevantVotes += 1;
+                    }
+                    newIssue.userVote = voteType;
+                }
+                
+                return newIssue;
+            }
+            return issue;
+        }));
+    };
+
     return (
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            {/* Back Button */}
-            <Button
-                startIcon={<ArrowBackIcon />}
-                onClick={() => navigate('/')}
-                sx={{ mb: 3 }}
-            >
-                Back to Events
-            </Button>
+        <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', py: 3 }}>
+            <Container maxWidth="md">
+                {/* Back Button */}
+                <Button
+                    onClick={() => navigate('/')}
+                    sx={{ 
+                        mb: 2,
+                        color: 'primary.main',
+                        textTransform: 'none',
+                        fontSize: '0.9rem',
+                        '&:hover': {
+                            bgcolor: 'primary.light',
+                            color: 'white'
+                        }
+                    }}
+                >
+                    ← Back to Events
+                </Button>
 
-            <Grid container spacing={4}>
-                {/* Event Image */}
-                <Grid item xs={12} md={6}>
-                    <Card>
-                        <CardMedia
-                            component="img"
-                            height="400"
-                            image={event.image}
-                            alt={event.name}
-                        />
-                    </Card>
-                </Grid>
-
-                {/* Event Details */}
-                <Grid item xs={12} md={6}>
-                    <Box>
-                        {/* Title and Status */}
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                            <Typography variant="h3" component="h1" gutterBottom>
-                                {event.name}
-                            </Typography>
-                            <Chip
-                                label={eventStatus.status}
-                                color={eventStatus.color}
-                                size="large"
-                                sx={{ fontWeight: 'bold' }}
+                {/* Hero Section */}
+                <Card sx={{ 
+                    mb: 3, 
+                    borderRadius: 2,
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }}>
+                    <Grid container>
+                        {/* Event Image */}
+                        <Grid item xs={12} md={6}>
+                            <CardMedia
+                                component="img"
+                                height="350"
+                                image={event.image}
+                                alt={event.name}
+                                sx={{ objectFit: 'cover' }}
                             />
-                        </Box>
-
-                        {/* Price */}
-                        <Typography variant="h4" color="primary" sx={{ mb: 3, fontWeight: 'bold' }}>
-                            ₹{event.price}
-                        </Typography>
-
-                        {/* Event Info Cards */}
-                        <Grid container spacing={2} sx={{ mb: 3 }}>
-                            <Grid item xs={6}>
-                                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                                    <Typography variant="subtitle2" color="text.secondary">
-                                        📅 Date
-                                    </Typography>
-                                    <Typography variant="h6">
-                                        {event.date}
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                                    <Typography variant="subtitle2" color="text.secondary">
-                                        🎫 Seats Left
-                                    </Typography>
-                                    <Typography variant="h6">
-                                        {event.seats > 0 ? event.seats : "Sold Out"}
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                                    <Typography variant="subtitle2" color="text.secondary">
-                                        📍 City
-                                    </Typography>
-                                    <Typography variant="h6">
-                                        {event.city}
-                                    </Typography>
-                                </Paper>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Paper sx={{ p: 2, textAlign: 'center' }}>
-                                    <Typography variant="subtitle2" color="text.secondary">
-                                        🏢 Category
-                                    </Typography>
-                                    <Typography variant="h6">
-                                        {event.category}
-                                    </Typography>
-                                </Paper>
-                            </Grid>
                         </Grid>
 
-                        {/* Book Now Button */}
-                        <Button
-                            variant="contained"
-                            size="large"
-                            fullWidth
-                            disabled={event.seats === 0}
-                            sx={{ mb: 2, py: 1.5, fontSize: '1.1rem', fontWeight: 'bold' }}
-                        >
-                            {event.seats === 0 ? "Sold Out" : "Book Now"}
-                        </Button>
-                    </Box>
+                        {/* Event Info */}
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                {/* Status Badge */}
+                                <Box sx={{ mb: 1.5 }}>
+                                    <Chip
+                                        label={eventStatus.status}
+                                        color={eventStatus.color}
+                                        size="medium"
+                                        sx={{ 
+                                            fontWeight: 'bold',
+                                            fontSize: '0.8rem'
+                                        }}
+                                    />
+                                </Box>
+
+                                {/* Event Title */}
+                                <Typography 
+                                    variant="h4" 
+                                    component="h1" 
+                                    gutterBottom
+                                    sx={{ 
+                                        fontWeight: 700,
+                                        color: 'text.primary',
+                                        mb: 1
+                                    }}
+                                >
+                                    {event.name}
+                                </Typography>
+
+                                {/* Category */}
+                                <Typography 
+                                    variant="subtitle1" 
+                                    color="primary.main"
+                                    sx={{ mb: 2, fontWeight: 600 }}
+                                >
+                                    {event.category} Event
+                                </Typography>
+
+                                {/* Price */}
+                                <Typography 
+                                    variant="h3" 
+                                    color="primary" 
+                                    sx={{ 
+                                        mb: 2, 
+                                        fontWeight: 'bold'
+                                    }}
+                                >
+                                    ₹{event.price}
+                                </Typography>
+
+                                {/* Organizer Info */}
+                                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                                    <Avatar 
+                                        sx={{ 
+                                            bgcolor: 'primary.main', 
+                                            mr: 1.5,
+                                            width: 36,
+                                            height: 36
+                                        }}
+                                    >
+                                        {event.organizer.charAt(0)}
+                                    </Avatar>
+                                    <Box>
+                                        <Typography variant="caption" color="text.secondary">
+                                            Organized by
+                                        </Typography>
+                                        <Typography variant="subtitle1" fontWeight={600}>
+                                            {event.organizer}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                {/* Book Now Button */}
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    fullWidth
+                                    disabled={event.seats === 0}
+                                    sx={{ 
+                                        py: 1.5, 
+                                        fontSize: '1rem', 
+                                        fontWeight: 'bold',
+                                        borderRadius: 2,
+                                        textTransform: 'none',
+                                        boxShadow: '0 4px 16px rgba(25, 118, 210, 0.3)',
+                                        '&:hover': {
+                                            boxShadow: '0 6px 20px rgba(25, 118, 210, 0.4)',
+                                        }
+                                    }}
+                                >
+                                    {event.seats === 0 ? "🎫 Sold Out" : "🎫 Book Now"}
+                                </Button>
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </Card>
+
+                {/* Event Details Cards */}
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                    <Grid item xs={6} md={3}>
+                        <Paper sx={{ 
+                            p: 2, 
+                            textAlign: 'center',
+                            borderRadius: 2,
+                            height: '100%'
+                        }}>
+                            <Typography variant="h5" sx={{ mb: 0.5 }}>📅</Typography>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                                Event Date
+                            </Typography>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                                {new Date(event.date).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric'
+                                })}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                        <Paper sx={{ 
+                            p: 2, 
+                            textAlign: 'center',
+                            borderRadius: 2,
+                            height: '100%'
+                        }}>
+                            <Typography variant="h5" sx={{ mb: 0.5 }}>🎫</Typography>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                                Seats Available
+                            </Typography>
+                            <Typography 
+                                variant="subtitle2" 
+                                fontWeight={600}
+                                color={event.seats === 0 ? 'error.main' : 'success.main'}
+                            >
+                                {event.seats > 0 ? event.seats : "Sold Out"}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                        <Paper sx={{ 
+                            p: 2, 
+                            textAlign: 'center',
+                            borderRadius: 2,
+                            height: '100%'
+                        }}>
+                            <Typography variant="h5" sx={{ mb: 0.5 }}>📍</Typography>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                                Location
+                            </Typography>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                                {event.city}
+                            </Typography>
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={6} md={3}>
+                        <Paper sx={{ 
+                            p: 2, 
+                            textAlign: 'center',
+                            borderRadius: 2,
+                            height: '100%'
+                        }}>
+                            <Typography variant="h5" sx={{ mb: 0.5 }}>🏢</Typography>
+                            <Typography variant="caption" color="text.secondary" gutterBottom>
+                                Category
+                            </Typography>
+                            <Typography variant="subtitle2" fontWeight={600}>
+                                {event.category}
+                            </Typography>
+                        </Paper>
+                    </Grid>
                 </Grid>
 
-                {/* Full Description */}
-                <Grid item xs={12}>
-                    <Paper sx={{ p: 3, mt: 2 }}>
-                        <Typography variant="h5" gutterBottom>
-                            About This Event
+                {/* Description Section */}
+                <Card sx={{ 
+                    p: 3, 
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                    mb: 3
+                }}>
+                    <Typography 
+                        variant="h5" 
+                        gutterBottom
+                        sx={{ 
+                            fontWeight: 700,
+                            color: 'text.primary',
+                            mb: 2
+                        }}
+                    >
+                        About This Event
+                    </Typography>
+                    <Typography 
+                        variant="body1" 
+                        paragraph
+                        sx={{ 
+                            fontSize: '1rem',
+                            lineHeight: 1.6,
+                            color: 'text.secondary',
+                            mb: 3
+                        }}
+                    >
+                        {event.description}
+                    </Typography>
+                    
+                    <Divider sx={{ my: 2 }} />
+                    
+                    <Typography 
+                        variant="h6" 
+                        gutterBottom 
+                        sx={{ 
+                            fontWeight: 600,
+                            mb: 2
+                        }}
+                    >
+                        Event Information
+                    </Typography>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="h6" sx={{ mr: 1 }}>🏛️</Typography>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Venue
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight={600}>
+                                        {event.venue}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                                <Typography variant="h6" sx={{ mr: 1 }}>👥</Typography>
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                        Organizer
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight={600}>
+                                        {event.organizer}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </Card>
+
+                {/* Issues Section */}
+                <Card sx={{ 
+                    p: 3, 
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+                }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                        <Typography 
+                            variant="h6" 
+                            sx={{ 
+                                fontWeight: 600,
+                                color: 'text.primary'
+                            }}
+                        >
+                            Issues ({issues.length})
                         </Typography>
-                        <Typography variant="body1" paragraph>
-                            {event.description}
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => setOpenIssueDialog(true)}
+                            sx={{ 
+                                textTransform: 'none',
+                                fontWeight: 600,
+                                borderRadius: 2,
+                                px: 3,
+                                py: 1
+                            }}
+                        >
+                            🚨 Raise an Issue
+                        </Button>
+                    </Box>
+                    
+                    {issues.length === 0 ? (
+                        <Typography 
+                            variant="body2" 
+                            color="text.secondary"
+                            sx={{ fontStyle: 'italic' }}
+                        >
+                            No issues reported yet. Having trouble with this event? Report any concerns you may have.
                         </Typography>
-                        
-                        <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                            Event Details
+                    ) : (
+                        <List sx={{ mt: 2 }}>
+                            {issues.map((issue) => (
+                                <ListItem 
+                                    key={issue.id} 
+                                    sx={{ 
+                                        px: 0, 
+                                        py: 2,
+                                        borderBottom: '1px solid #f0f0f0',
+                                        '&:last-child': {
+                                            borderBottom: 'none'
+                                        }
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <Typography variant="h6">⚠️</Typography>
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={issue.text}
+                                        secondary={`Reported on ${issue.timestamp}`}
+                                        primaryTypographyProps={{
+                                            fontWeight: 500,
+                                            color: 'text.primary'
+                                        }}
+                                        secondaryTypographyProps={{
+                                            fontSize: '0.75rem',
+                                            color: 'text.secondary'
+                                        }}
+                                    />
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                        {/* Upvote Button */}
+                                        <Button
+                                            size="small"
+                                            variant={issue.userVote === 'upvote' ? 'contained' : 'outlined'}
+                                            color="success"
+                                            onClick={() => handleVote(issue.id, 'upvote')}
+                                            sx={{
+                                                minWidth: 'auto',
+                                                px: 1.5,
+                                                py: 0.5,
+                                                fontSize: '0.75rem',
+                                                textTransform: 'none'
+                                            }}
+                                        >
+                                            👍 {issue.upvotes}
+                                        </Button>
+                                        
+                                        {/* Irrelevant Button */}
+                                        <Button
+                                            size="small"
+                                            variant={issue.userVote === 'irrelevant' ? 'contained' : 'outlined'}
+                                            color="error"
+                                            onClick={() => handleVote(issue.id, 'irrelevant')}
+                                            sx={{
+                                                minWidth: 'auto',
+                                                px: 1.5,
+                                                py: 0.5,
+                                                fontSize: '0.75rem',
+                                                textTransform: 'none'
+                                            }}
+                                        >
+                                            ❌ {issue.irrelevantVotes}
+                                        </Button>
+                                    </Box>
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                </Card>
+
+                {/* Issue Dialog/Popup */}
+                <Dialog 
+                    open={openIssueDialog} 
+                    onClose={() => setOpenIssueDialog(false)}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle sx={{ fontWeight: 600 }}>
+                        Report an Issue
+                    </DialogTitle>
+                    <DialogContent>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                            Please describe the issue you're experiencing with this event. Our team will review and address it promptly.
                         </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <Typography><strong>Venue:</strong> {event.venue}</Typography>
-                            <Typography><strong>Organizer:</strong> {event.organizer}</Typography>
-                            <Typography><strong>Category:</strong> {event.category}</Typography>
-                            <Typography><strong>Location:</strong> {event.city}</Typography>
-                        </Box>
-                    </Paper>
-                </Grid>
-            </Grid>
-        </Container>
+                        <TextField
+                            autoFocus
+                            fullWidth
+                            multiline
+                            rows={4}
+                            variant="outlined"
+                            label="Describe your issue"
+                            value={issueText}
+                            onChange={(e) => setIssueText(e.target.value)}
+                            placeholder="Please provide details about the issue..."
+                            sx={{ mt: 1 }}
+                        />
+                    </DialogContent>
+                    <DialogActions sx={{ p: 3 }}>
+                        <Button 
+                            onClick={() => setOpenIssueDialog(false)}
+                            sx={{ textTransform: 'none' }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleSubmitIssue}
+                            variant="contained"
+                            disabled={!issueText.trim()}
+                            sx={{ 
+                                textTransform: 'none',
+                                fontWeight: 600
+                            }}
+                        >
+                            Submit Issue
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </Container>
+        </Box>
     );
 }
 
