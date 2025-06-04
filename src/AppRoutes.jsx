@@ -1,13 +1,22 @@
 import React from "react";
-import {Routes, Route, Navigate} from "react-router-dom";
-import {isLoggedIn} from "./API/API.jsx";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { isLoggedIn } from "./API/API.jsx";
 import Layout from "./components/Layout.jsx";
 import Login from "./pages/auth/Login.jsx";
 import Register from "./pages/auth/Register.jsx";
 import MyEvents from "./pages/MyEvents.jsx";
 import PrivateLayout from "./components/PrivateLayout.jsx";
 import Home from "./pages/Home.jsx";
+
 import OTPVerification from "./pages/auth/OTPVerification.jsx";
+
+import AddEvent from "./pages/auth/AddEvent.jsx";
+
+
+
+import AddEvent from "./pages/auth/AddEvent.jsx";
+
+
 
 const PrivateRoute = ({ element }) => {
     return isLoggedIn() ? element : <Navigate to="/home" />;
@@ -17,10 +26,11 @@ const PublicRoute = ({ element }) => {
     return isLoggedIn() ? <Navigate to="/" /> : element;
 };
 
-const AppRoutes = () => {
+const AppRoutes = ({ addEvent }) => {
     return (
         <Routes>
             <Route path="/" element={<Layout />}>
+                {/* Public routes */}
                 <Route index element={<PrivateRoute element={<MyEvents />} />} />
                 <Route path="" element={<PublicRoute element={<Home />} />} />
                 <Route path="home" element={<PublicRoute element={<Home />} />} />
@@ -32,10 +42,16 @@ const AppRoutes = () => {
                 <Route element={<PrivateRoute element={<PrivateLayout />} />}>
                     <Route path="/" element={<Navigate to="/dashboard" />} />
                     <Route path="dashboard" element={<MyEvents />} />
+                    <Route path="AddEvent" element={<AddEvent />} />
+                    {/* Add event route */}
+
                 </Route>
 
-                {/* Redirect for unknown paths */}
-                <Route path="*" element={<Navigate to={isLoggedIn() ? "/dashboard" : "/home"} />} />
+                {/* Redirect unknown paths */}
+                <Route
+                    path="*"
+                    element={<Navigate to={isLoggedIn() ? "/dashboard" : "/home"} />}
+                />
             </Route>
         </Routes>
     );
