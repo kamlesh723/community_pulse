@@ -7,16 +7,13 @@ import Register from "./pages/auth/Register.jsx";
 import MyEvents from "./pages/MyEvents.jsx";
 import PrivateLayout from "./components/PrivateLayout.jsx";
 import Home from "./pages/Home.jsx";
-
 import OTPVerification from "./pages/auth/OTPVerification.jsx";
-
 import AddEvent from "./pages/auth/AddEvent.jsx";
+import EventDetails from "./pages/EventDetails.jsx";
 
 
-
-import AddEvent from "./pages/auth/AddEvent.jsx";
-
-
+import CheckoutForm from "./pages/CheckoutForm.jsx";
+import ReportIssuePage from "./pages/issue/ReportIssuePage.jsx"; //
 
 const PrivateRoute = ({ element }) => {
     return isLoggedIn() ? element : <Navigate to="/home" />;
@@ -26,7 +23,7 @@ const PublicRoute = ({ element }) => {
     return isLoggedIn() ? <Navigate to="/" /> : element;
 };
 
-const AppRoutes = ({ addEvent }) => {
+const AppRoutes = () => {
     return (
         <Routes>
             <Route path="/" element={<Layout />}>
@@ -37,17 +34,19 @@ const AppRoutes = ({ addEvent }) => {
                 <Route path="login" element={<PublicRoute element={<Login />} />} />
                 <Route path="register" element={<PublicRoute element={<Register />} />} />
                 <Route path="/otp-verification" element={<OTPVerification />} />
+                <Route path="/event/:id" element={<EventDetails />} />
 
-                {/* Private (authenticated) routes */}
+                {/* Private routes */}
                 <Route element={<PrivateRoute element={<PrivateLayout />} />}>
                     <Route path="/" element={<Navigate to="/dashboard" />} />
                     <Route path="dashboard" element={<MyEvents />} />
-                    <Route path="AddEvent" element={<AddEvent />} />
-                    {/* Add event route */}
+                    <Route path="checkout" element={<PrivateRoute element={<CheckoutForm />} />} />
+                    <Route path="/report" element={<ReportIssuePage />} />
+                    <Route path="/add-event" element={<AddEvent />} />
 
                 </Route>
 
-                {/* Redirect unknown paths */}
+                {/* Catch-all fallback */}
                 <Route
                     path="*"
                     element={<Navigate to={isLoggedIn() ? "/dashboard" : "/home"} />}

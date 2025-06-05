@@ -1,5 +1,4 @@
-// Layout.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     AppBar,
     Toolbar,
@@ -8,12 +7,30 @@ import {
     Container,
     useTheme,
     useMediaQuery,
+    Box,
 } from "@mui/material";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 
 function Layout() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+    const navigate = useNavigate();
+
+    // Simple login state: check if token exists in localStorage
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem("token"); // Or whatever key you use
+        setIsLoggedIn(!!token);
+    }, []);
+
+    // Logout handler
+    const handleLogout = () => {
+        localStorage.removeItem("token"); // Remove token on logout
+        setIsLoggedIn(false);
+        navigate("/login"); // redirect to login page
+    };
 
     return (
         <>
@@ -41,29 +58,97 @@ function Layout() {
                         Community Pulse
                     </Typography>
 
-                    {/* Only Login button */}
-                    <Button
-                        component={Link}
-                        to="/login"
-                        sx={{
-                            backgroundColor: "#c8c2bd", // bright yellow
-                            color: "#1976d2", // matching primary blue text
-                            fontWeight: 700,
-                            fontSize: 16,
-                            textTransform: "none",
-                            padding: "8px 20px",
-                            borderRadius: 2,
-                            boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
-                            transition: "background-color 0.3s ease, box-shadow 0.3s ease",
-                            "&:hover": {
-                                backgroundColor: "#ffea00", // brighter yellow on hover
-                                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
-                            },
-                        }}
-                    >
-                        Login
-                    </Button>
+                    {/* Buttons container aligned right with small gaps */}
+                    <Box sx={{ display: "flex", gap: 1 }}>
+                        {isLoggedIn ? (
+                            <>
+                                <Button
+                                    onClick={() => navigate("/report")}
+                                    sx={{
+                                        backgroundColor: "#c8c2bd",
+                                        color: "#1976d2",
+                                        fontWeight: 700,
+                                        fontSize: 16,
+                                        textTransform: "none",
+                                        padding: "8px 20px",
+                                        borderRadius: 2,
+                                        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
+                                        transition: "background-color 0.3s ease, box-shadow 0.3s ease",
+                                        "&:hover": {
+                                            backgroundColor: "#ffea00",
+                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+                                        },
+                                    }}
+                                >
+                                    Report New Issue
+                                </Button>
 
+                                <Button
+                                    onClick={() => navigate("/add-event")}
+                                    sx={{
+                                        backgroundColor: "#c8c2bd",
+                                        color: "#1976d2",
+                                        fontWeight: 700,
+                                        fontSize: 16,
+                                        textTransform: "none",
+                                        padding: "8px 20px",
+                                        borderRadius: 2,
+                                        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
+                                        transition: "background-color 0.3s ease, box-shadow 0.3s ease",
+                                        "&:hover": {
+                                            backgroundColor: "#ffea00",
+                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+                                        },
+                                    }}
+                                >
+                                    + Add New Event
+                                </Button>
+
+                                <Button
+                                    onClick={handleLogout}
+                                    sx={{
+                                        backgroundColor: "#c8c2bd",
+                                        color: "#1976d2",
+                                        fontWeight: 700,
+                                        fontSize: 16,
+                                        textTransform: "none",
+                                        padding: "8px 20px",
+                                        borderRadius: 2,
+                                        boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
+                                        transition: "background-color 0.3s ease, box-shadow 0.3s ease",
+                                        "&:hover": {
+                                            backgroundColor: "#ffea00",
+                                            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+                                        },
+                                    }}
+                                >
+                                    Logout
+                                </Button>
+                            </>
+                        ) : (
+                            <Button
+                                component={Link}
+                                to="/login"
+                                sx={{
+                                    backgroundColor: "#c8c2bd",
+                                    color: "#1976d2",
+                                    fontWeight: 700,
+                                    fontSize: 16,
+                                    textTransform: "none",
+                                    padding: "8px 20px",
+                                    borderRadius: 2,
+                                    boxShadow: "0 2px 6px rgba(0, 0, 0, 0.15)",
+                                    transition: "background-color 0.3s ease, box-shadow 0.3s ease",
+                                    "&:hover": {
+                                        backgroundColor: "#ffea00",
+                                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.25)",
+                                    },
+                                }}
+                            >
+                                Login
+                            </Button>
+                        )}
+                    </Box>
                 </Toolbar>
             </AppBar>
 

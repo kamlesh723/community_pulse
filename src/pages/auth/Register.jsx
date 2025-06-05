@@ -28,7 +28,7 @@ const Register = () => {
     };
 
     const handleRegister = async () => {
-        const {email, username, phone,  password, confirmPassword} = form;
+        const { email, username, phone, password, confirmPassword } = form;
 
         if (!email || !username || !phone || !password || !confirmPassword) {
             return setError("All fields are required.");
@@ -42,18 +42,22 @@ const Register = () => {
             const response = await registerUser(email, username, phone, password);
 
             if (response.status === 200) {
-                // Save email for OTP verification
-                localStorage.setItem("pendingEmail", email);
+                // Save form data temporarily for OTP verification
+                localStorage.setItem("pendingUser", JSON.stringify(form));
                 navigate("/otp-verification", { state: { email } });
+            } else {
+                // Show error message if OTP sending failed or any other issue occurs
+                setError(response.data || "Failed to send OTP. Please try again.");
             }
         } catch (err) {
             if (err.response && err.response.data) {
-                setError(err.response.data); // From backend, e.g., "Email is already in use"
+                setError(err.response.data);
             } else {
-                setError("Registration failed. Please try again.");
+                setError("Failed to send OTP. Please try again.");
             }
         }
     };
+
 
     return (
         <Container maxWidth="sm">

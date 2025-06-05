@@ -1,12 +1,18 @@
+import React from "react";
 import { BrowserRouter } from "react-router-dom";
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
 import AppRoutes from "./AppRoutes";
-import Home from "./pages/Home.jsx";
+
+const stripePromise = loadStripe("pk_test_51RWM1KEHxsALlKnCJnAqs7T2YqiIPPIuwHKiJuXYpAJe7tRljvR1W6zLVKdprtFfxhi3ZQY5xBCZ8FAyhFtnzMX600P4L0PhYH");
 
 function App() {
     return (
-        <BrowserRouter>
-            <AppRoutes />
-        </BrowserRouter>
+        <Elements stripe={stripePromise}>
+            <BrowserRouter>
+                <AppRoutes />
+            </BrowserRouter>
+        </Elements>
     );
 }
 
